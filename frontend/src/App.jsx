@@ -2,10 +2,12 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
+import SportsRoadmap from "./pages/SportsRoadmap";
 
 function App() {
   return (
     <Routes>
+      <Route path="/sports-roadmap" element={<SportsRoadmap />} />
       <Route path="/" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<Dashboard />} />
