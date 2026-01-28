@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const progressRoutes = require("./routes/progress.routes");
 require("dotenv").config();
 
 const authRoutes = require("./routes/auth.routes");
@@ -10,10 +11,11 @@ const app = express();   // ✅ app first
 app.use(cors());
 app.use(express.json());
 
+
 // ✅ routes after app created
 app.use("/api/auth", authRoutes);
 app.use("/api/sports", sportsRoutes);
-
+app.use("/api/progress", progressRoutes);
 app.get("/", (req, res) => {
   res.json({ message: "AthletiPath backend running" });
 });

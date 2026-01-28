@@ -3,6 +3,8 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import SportsRoadmap from "./pages/SportsRoadmap";
+import Progress from "./pages/Progress";
+
 
 function App() {
   return (
@@ -11,6 +13,7 @@ function App() {
       <Route path="/" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/progress" element={<Progress />} />
     </Routes>
   );
 }
