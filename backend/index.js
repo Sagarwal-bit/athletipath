@@ -1,7 +1,9 @@
+require("dotenv").config();
+const eventRoutes = require("./routes/event.routes");
 const express = require("express");
 const cors = require("cors");
 const progressRoutes = require("./routes/progress.routes");
-require("dotenv").config();
+
 
 const authRoutes = require("./routes/auth.routes");
 const sportsRoutes = require("./routes/sports.routes");
@@ -14,6 +16,7 @@ app.use(express.json());
 
 // ✅ routes after app created
 app.use("/api/auth", authRoutes);
+app.use("/api/events", eventRoutes);
 app.use("/api/sports", sportsRoutes);
 app.use("/api/progress", progressRoutes);
 app.get("/", (req, res) => {
