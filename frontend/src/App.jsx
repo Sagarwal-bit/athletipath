@@ -5,7 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import SportsRoadmap from "./pages/SportsRoadmap";
 import Progress from "./pages/Progress";
 import Events from "./pages/Events";
-
+import Notifications from "./pages/Notifications";
 
 function App() {
   return (
@@ -16,6 +16,7 @@ function App() {
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/progress" element={<Progress />} />
       <Route path="/events" element={<Events />} />
+      <Route path="/notifications" element={<Notifications />} />
     </Routes>
   );
 }
