@@ -7,11 +7,13 @@ import Progress from "./pages/Progress";
 import Events from "./pages/Events";
 import Notifications from "./pages/Notifications";
 import TrustScore from "./pages/TrustScore";
-
+import Biometric from "./pages/Biometric";
 function App() {
   return (
     <Routes>
+        
       <Route path="/trust-score" element={<TrustScore />} />
+      <Route path="/biometric" element={<Biometric />} />
       <Route path="/sports-roadmap" element={<SportsRoadmap />} />
       <Route path="/" element={<Login />} />
       <Route path="/register" element={<Register />} />

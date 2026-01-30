@@ -7,7 +7,7 @@ const notificationRoutes = require("./routes/notification.routes");
 const trustRoutes = require("./routes/trust.routes");
 const authRoutes = require("./routes/auth.routes");
 const sportsRoutes = require("./routes/sports.routes");
-
+const biometricRoutes = require("./routes/biometric.routes");
 const app = express();   // ✅ app first
 
 app.use(cors());
@@ -17,6 +17,7 @@ app.use(express.json());
 // ✅ routes after app created
 app.use("/api/auth", authRoutes);
 app.use("/api/trust", trustRoutes);
+app.use("/api/biometric", biometricRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/sports", sportsRoutes);
 app.use("/api/progress", progressRoutes);
