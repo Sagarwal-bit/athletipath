@@ -1,6 +1,6 @@
 const express = require("express");
 const db = require("../config/db");
-
+const sendMail = require("../utils/mailer");
 const router = express.Router();
 
 // generate notifications for all users
@@ -8,6 +8,16 @@ router.post("/generate", async (req,res)=>{
   const [events] = await db.query("SELECT * FROM events");
 
   const [users] = await db.query("SELECT id FROM users WHERE role='student'");
+const [[user]] = await db.query(
+  "SELECT email FROM users WHERE id=?",
+  [u.id]
+);
+
+await sendMail(
+  user.email,
+  "New Event Notification",
+  `You have a new event: ${e.title}\nDeadline: ${e.deadline}`
+);
 
   for (let e of events) {
     for (let u of users) {
