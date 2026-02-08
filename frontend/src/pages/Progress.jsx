@@ -1,24 +1,34 @@
 import { useEffect, useState } from "react";
+import Layout from "../components/Layout";
 
 export default function Progress() {
   const [progress, setProgress] = useState([]);
 
-  useEffect(()=>{
+  useEffect(() => {
     fetch("http://localhost:5000/api/progress/1")
-      .then(res=>res.json())
-      .then(data=>setProgress(data));
-  },[]);
+      .then(res => res.json())
+      .then(data => setProgress(data));
+  }, []);
 
   return (
-    <div>
-      <h2>My Progress</h2>
+    <Layout>
+      <h1 className="text-2xl font-bold mb-6">
+        My Progress
+      </h1>
 
-      {progress.map((p,i)=>(
-        <div key={i} style={{padding:10,border:"1px solid #555",margin:8}}>
+      {progress.map((p, i) => (
+        <div
+          key={i}
+          className="p-4 border border-gray-600 rounded mb-3"
+        >
           <b>{p.level_name}</b> — {p.status}
-          {p.performance && <p>Performance: {p.performance}</p>}
+          {p.performance && (
+            <p className="mt-1">
+              Performance: {p.performance}
+            </p>
+          )}
         </div>
       ))}
-    </div>
+    </Layout>
   );
 }

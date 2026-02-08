@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Layout from "../components/Layout";
 
 export default function Events() {
   const [events,setEvents] = useState([]);
@@ -10,17 +11,34 @@ export default function Events() {
   },[]);
 
   return (
-    <div>
-      <h2>Upcoming Events</h2>
+    <div className="bg-white p-5 rounded shadow mb-4">
+        <Layout>
+      <h1 className="text-2xl font-bold mb-6">
+        Upcoming Events
+      </h1>
 
-      {events.map(e=>(
-        <div key={e.id} style={{border:"1px solid #444",padding:10,margin:8}}>
-          <h4>{e.title}</h4>
-          <p>{e.location}</p>
-          <p>Date: {e.event_date}</p>
-          <p>Deadline: {e.deadline}</p>
-        </div>
-      ))}
+      {/* events cards */}
+    </Layout>
+
+      {events.map(e => (
+  <div
+    key={e.id}
+    className="bg-white p-5 rounded shadow mb-4"
+  >
+    <h3 className="font-semibold text-lg">
+      {e.title}
+    </h3>
+
+    <p className="text-gray-600">
+      Location: {e.location}
+    </p>
+
+    <p className="text-gray-600">
+      Deadline: {e.deadline}
+    </p>
+  </div>
+))}
+
     </div>
   );
 }

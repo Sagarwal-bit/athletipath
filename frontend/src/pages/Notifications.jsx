@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Layout from "../components/Layout";
 
 export default function Notifications() {
   const [notes,setNotes] = useState([]);
@@ -10,8 +11,14 @@ export default function Notifications() {
   },[]);
 
   return (
-    <div>
-      <h2>My Notifications</h2>
+    <div className="bg-white p-5 rounded shadow mb-4">
+        <Layout>
+      <h1 className="text-2xl font-bold mb-6">
+        Notifications
+      </h1>
+
+      {/* notification list */}
+    </Layout>
 
       {notes.map((n,i)=>(
         <div key={i} style={{border:"1px solid #444",padding:10,margin:8}}>

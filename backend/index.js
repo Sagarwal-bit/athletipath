@@ -10,17 +10,22 @@ const sportsRoutes = require("./routes/sports.routes");
 const biometricRoutes = require("./routes/biometric.routes");
 const app = express();   // ✅ app first
 const activityRoutes = require("./routes/activity.routes");
+const chartsRoutes = require("./routes/charts.routes");
+const dashboardRoutes = require("./routes/dashboard.routes");
 
 app.use(cors());
 app.use(express.json());
 
 
 // ✅ routes after app created
+
 app.use("/api/auth", authRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/trust", trustRoutes);
 app.use("/api/biometric", biometricRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/charts", chartsRoutes);
 app.use("/api/sports", sportsRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/notifications", notificationRoutes);
