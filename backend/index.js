@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth.routes");
 const sportsRoutes = require("./routes/sports.routes");
 const biometricRoutes = require("./routes/biometric.routes");
 const app = express();   // ✅ app first
+const activityRoutes = require("./routes/activity.routes");
 
 app.use(cors());
 app.use(express.json());
@@ -16,6 +17,7 @@ app.use(express.json());
 
 // ✅ routes after app created
 app.use("/api/auth", authRoutes);
+app.use("/api/activity", activityRoutes);
 app.use("/api/trust", trustRoutes);
 app.use("/api/biometric", biometricRoutes);
 app.use("/api/events", eventRoutes);
