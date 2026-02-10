@@ -22,7 +22,7 @@ router.get("/summary/:studentId", async (req, res) => {
 
   res.json({
     activities: activity.count,
-    distance: activity.distance,
+   distance: Number(activity.distance).toFixed(2),
     trust: trust?.score || 50,
     events: events.count
   });

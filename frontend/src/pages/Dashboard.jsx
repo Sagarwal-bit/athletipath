@@ -25,7 +25,10 @@ export default function Dashboard() {
 
         <div className="bg-white p-5 rounded shadow">
           <h3 className="text-gray-500">Distance (km)</h3>
-          <p className="text-3xl font-bold">{data.distance}</p>
+          <p className="text-3xl font-bold">
+  {Number(data.distance).toFixed(2)} km
+</p>
+
         </div>
 
         <div className="bg-white p-5 rounded shadow">
