@@ -9,7 +9,7 @@ export default function Layout({ children }) {
     clearAuthSession();
     navigate("/", { replace: true });
   };
-
+//hi
   return (
     <div className="flex min-h-screen bg-gray-100">
       
