@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Layout from "../components/Layout";
 import { calculateDistance } from "../utils/distance";
+import { authFetch, getAuthUser } from "../utils/auth";
 
 export default function Activity() {
-  const studentId = 1;
+  const studentId = getAuthUser()?.id;
 
   const [startLoc, setStartLoc] = useState(null);
   const [endLoc, setEndLoc] = useState(null);
@@ -56,7 +57,6 @@ export default function Activity() {
     const speed = distance / (duration / 3600); // km/h
 
     const formData = new FormData();
-    formData.append("student_id", studentId);
     formData.append("distance", distance);
     formData.append("duration", duration);
     formData.append("latitude", endLoc.lat);
@@ -64,27 +64,32 @@ export default function Activity() {
     formData.append("speed", speed);
     formData.append("video", video);
 
-    await fetch("http://localhost:5000/api/activity/log", {
+    const res = await authFetch("/api/activity/log", {
       method: "POST",
       body: formData,
     });
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error || "Failed to record activity");
+      return;
+    }
 
     alert("Activity recorded successfully");
     loadActivities();
   };
 
   // LOAD HISTORY
-  const loadActivities = async () => {
-    const res = await fetch(
-      `http://localhost:5000/api/activity/${studentId}`
-    );
+  const loadActivities = useCallback(async () => {
+    const res = await authFetch(`/api/activity/${studentId}`);
+    if (!res.ok) return;
     const data = await res.json();
     setActivities(data);
-  };
+  }, [studentId]);
 
   useEffect(() => {
+    if (!studentId) return;
     loadActivities();
-  }, []);
+  }, [studentId, loadActivities]);
 
   return (
     <Layout>
@@ -133,12 +138,12 @@ export default function Activity() {
         {activities.map((a) => (
           <div key={a.id} className="border-b py-4 text-sm">
             <p>📅 {new Date(a.created_at).toLocaleString()}</p>
-            <p>📏 Distance: {a.distance.toFixed(2)} km</p>
-            <p>⚡ Speed: {a.speed.toFixed(2)} km/h</p>
+            <p>📏 Distance: {Number(a.distance || 0).toFixed(2)} km</p>
+            <p>⚡ Speed: {Number(a.speed || 0).toFixed(2)} km/h</p>
 
             {a.video_path && (
               <video
-                src={`http://localhost:5000/${a.video_path}`}
+                src={`http://localhost:5000/${String(a.video_path).replace(/^\/+/, "")}`}
                 controls
                 className="mt-2 w-64 rounded"
               />

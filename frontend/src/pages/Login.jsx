@@ -1,13 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authFetch, setAuthSession } from "../utils/auth";
 
-export default function Login() {
+export default function Login({ onLoginSuccess }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const login = async () => {
-    const res = await fetch("http://localhost:5000/api/auth/login", {
+    const res = await authFetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -16,8 +17,12 @@ export default function Login() {
     const data = await res.json();
     if (!res.ok) return alert(data.msg);
 
-    localStorage.setItem("token", data.token);
-    localStorage.setItem("role", data.role);
+    setAuthSession({
+      token: data.token,
+      role: data.role,
+      user: data.user,
+    });
+    if (onLoginSuccess) onLoginSuccess();
 
     navigate("/dashboard");
   };

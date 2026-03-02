@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authFetch } from "../utils/auth";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -8,11 +9,16 @@ export default function Register() {
   const navigate = useNavigate();
 
   const register = async () => {
-    await fetch("http://localhost:5000/api/auth/register", {
+    const res = await authFetch("/api/auth/register", {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify(form)
     });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(data.error || "Registration failed");
+      return;
+    }
     navigate("/");
   };
 

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
+import { authFetch } from "../utils/auth";
 
 export default function Events() {
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/events")
+    authFetch("/api/events")
       .then((res) => res.json())
       .then((data) => setEvents(data));
   }, []);

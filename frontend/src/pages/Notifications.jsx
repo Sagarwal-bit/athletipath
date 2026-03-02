@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
+import { authFetch, getAuthUser } from "../utils/auth";
 
 export default function Notifications() {
   const [notes, setNotes] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/notifications/1")
+    const user = getAuthUser();
+    if (!user?.id) return;
+
+    authFetch(`/api/notifications/${user.id}`)
       .then((res) => res.json())
       .then((data) => setNotes(data));
   }, []);

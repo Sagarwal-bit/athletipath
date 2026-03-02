@@ -1,9 +1,10 @@
 const express = require("express");
 const db = require("../config/db");
+const { requireAuth, ensureSelfOrAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
-router.get("/summary/:studentId", async (req, res) => {
+router.get("/summary/:studentId", requireAuth, ensureSelfOrAdmin("studentId"), async (req, res) => {
   const studentId = req.params.studentId;
 
   const [[activity]] = await db.query(

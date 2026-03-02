@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
+import { authFetch, getAuthUser } from "../utils/auth";
 
 export default function TrustScore() {
   const [score, setScore] = useState(null);
@@ -8,7 +9,9 @@ export default function TrustScore() {
   useEffect(() => {
     async function fetchTrustScore() {
       try {
-        const res = await fetch("http://localhost:5000/api/trust/1");
+        const user = getAuthUser();
+        if (!user?.id) throw new Error("Session missing");
+        const res = await authFetch(`/api/trust/${user.id}`);
 
         if (!res.ok) {
           throw new Error("Failed to load trust score");

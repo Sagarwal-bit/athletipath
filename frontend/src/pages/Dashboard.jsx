@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
+import { authFetch, getAuthUser } from "../utils/auth";
 
 export default function Dashboard() {
   const [data, setData] = useState(null);
@@ -7,11 +8,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     const controller = new AbortController();
+    const user = getAuthUser();
+    if (!user?.id) {
+      setError("Session missing. Please login again.");
+      return () => controller.abort();
+    }
 
     async function fetchDashboard() {
       try {
-        const res = await fetch(
-          "http://localhost:5000/api/dashboard/summary/1",
+        const res = await authFetch(
+          `/api/dashboard/summary/${user.id}`,
           { signal: controller.signal }
         );
 

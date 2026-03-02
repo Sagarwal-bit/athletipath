@@ -1,12 +1,14 @@
 const express = require("express");
 const db = require("../config/db");
+const { requireAuth, ensureSelfOrAdmin } = require("../middleware/auth");
+const { computeTrustScore } = require("../utils/trust");
 
 const router = express.Router();
 
 /**
  * GET trust score
  */
-router.get("/:studentId", async (req, res) => {
+router.get("/:studentId", requireAuth, ensureSelfOrAdmin("studentId"), async (req, res) => {
   try {
     const { studentId } = req.params;
 
@@ -24,8 +26,12 @@ router.get("/:studentId", async (req, res) => {
 /**
  * Increment trust score (manual/system-based)
  */
-router.post("/increment", async (req, res) => {
+router.post("/increment", requireAuth, async (req, res) => {
   try {
+    if (!["admin", "teacher"].includes(req.user.role)) {
+      return res.status(403).json({ error: "Only admin/teacher can increment trust" });
+    }
+
     const { student_id, change } = req.body;
 
     if (!student_id || typeof change !== "number") {
@@ -50,27 +56,16 @@ router.post("/increment", async (req, res) => {
 /**
  * Recalculate trust score from activity logs (NEW LOGIC)
  */
-router.post("/recalculate/:studentId", async (req, res) => {
+router.post("/recalculate/:studentId", requireAuth, ensureSelfOrAdmin("studentId"), async (req, res) => {
   try {
     const { studentId } = req.params;
 
     const [activities] = await db.query(
-      "SELECT distance FROM activity_logs WHERE student_id = ?",
+      "SELECT distance, duration, speed, video_path FROM activity_logs WHERE student_id = ?",
       [studentId]
     );
 
-    let score = 50;
-
-    activities.forEach(activity => {
-      if (activity.distance >= 0.1 && activity.distance <= 5) {
-        score += 2;
-      } else {
-        score -= 5;
-      }
-    });
-
-    // Clamp score between 0 and 100
-    score = Math.max(0, Math.min(100, score));
+    const score = computeTrustScore(activities);
 
     await db.query(
       `INSERT INTO trust_scores (student_id, score, last_update)

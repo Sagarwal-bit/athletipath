@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { authFetch } from "../utils/auth";
 
 export default function SportsRoadmap() {
   const [levels, setLevels] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/sports/roadmap/1")
+    authFetch("/api/sports/roadmap/1")
       .then(res => res.json())
       .then(data => setLevels(data));
   }, []);
