@@ -4,35 +4,37 @@ const sendMail = require("../utils/mailer");
 const router = express.Router();
 
 // generate notifications for all users
-router.post("/generate", async (req,res)=>{
-  const [events] = await db.query("SELECT * FROM events");
+router.post("/generate", async (req, res) => {
+  try {
+    const [events] = await db.query("SELECT id, title, deadline FROM events");
+    const [users] = await db.query(
+      "SELECT id, email FROM users WHERE role='student' AND email IS NOT NULL AND email <> ''"
+    );
 
-  const [users] = await db.query("SELECT id FROM users WHERE role='student'");
-const [[user]] = await db.query(
-  "SELECT email FROM users WHERE id=?",
-  [u.id]
-);
+    for (const e of events) {
+      for (const u of users) {
+        await db.query(
+          "INSERT INTO notifications (user_id,event_id,notify_date) VALUES (?,?,?)",
+          [u.id, e.id, e.deadline]
+        );
 
-await sendMail(
-  user.email,
-  "New Event Notification",
-  `You have a new event: ${e.title}\nDeadline: ${e.deadline}`
-);
-
-  for (let e of events) {
-    for (let u of users) {
-      await db.query(
-        "INSERT INTO notifications (user_id,event_id,notify_date) VALUES (?,?,?)",
-        [u.id, e.id, e.deadline]
-      );
+        await sendMail(
+          u.email,
+          "New Event Notification",
+          `You have a new event: ${e.title}\nDeadline: ${e.deadline}`
+        );
+      }
     }
-  }
 
-  res.json({ message:"Notifications generated" });
+    res.json({ message: "Notifications generated" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to generate notifications" });
+  }
 });
 
 // get user notifications
-router.get("/:userId", async (req,res)=>{
+router.get("/:userId", async (req, res) => {
   const [rows] = await db.query(
     `SELECT e.title, e.deadline, n.status
      FROM notifications n

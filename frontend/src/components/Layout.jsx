@@ -10,12 +10,13 @@ export default function Layout({ children }) {
 
         <nav className="space-y-3">
           <Link className="block hover:text-blue-400" to="/dashboard">Dashboard</Link>
-          <Link className="block hover:text-blue-400" to="/sports-roadmap">Roadmap</Link>
-          <Link className="block hover:text-blue-400" to="/progress">Progress</Link>
-          <Link className="block hover:text-blue-400" to="/charts">Analytics</Link>
-          <Link className="block hover:text-blue-400" to="/events">Events</Link>
-          <Link className="block hover:text-blue-400" to="/notifications">Notifications</Link>
-          <Link className="block hover:text-blue-400" to="/trust">Trust Score</Link>
+          <Link className="block hover:text-blue-400" to="/activity">🏃 Activity</Link>
+          <Link className="block hover:text-blue-400" to="/roadmap">Roadmap</Link>
+          <Link className="block hover:text-blue-400" to="/progress">📈 Progress</Link>
+          <Link className="block hover:text-blue-400" to="/charts">📊 Analytics</Link>
+          <Link className="block hover:text-blue-400" to="/events">📅 Events</Link>
+          <Link className="block hover:text-blue-400" to="/notifications">🔔 Notifications</Link>
+          <Link className="block hover:text-blue-400" to="/trust-score">🔐 Trust Score</Link>
         </nav>
       </aside>
 

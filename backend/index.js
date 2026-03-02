@@ -12,17 +12,19 @@ const app = express();   // ✅ app first
 const activityRoutes = require("./routes/activity.routes");
 const chartsRoutes = require("./routes/charts.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
+const roadmapRoutes = require("./routes/roadmap.routes");
 
 app.use(cors());
 app.use(express.json());
 
 
 // ✅ routes after app created
-
+app.use("/uploads", express.static("uploads"));
 app.use("/api/auth", authRoutes);
 app.use("/api/activity", activityRoutes);
 app.use("/api/trust", trustRoutes);
 app.use("/api/biometric", biometricRoutes);
+app.use("/api/roadmap", roadmapRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/charts", chartsRoutes);

@@ -2,24 +2,59 @@ import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
 
 export default function TrustScore() {
-  const [score,setScore] = useState(0);
+  const [score, setScore] = useState(null);
+  const [error, setError] = useState(null);
 
-  useEffect(()=>{
-    fetch("http://localhost:5000/api/trust/1")
-      .then(res=>res.json())
-      .then(data=>setScore(data.score));
-  },[]);
+  useEffect(() => {
+    async function fetchTrustScore() {
+      try {
+        const res = await fetch("http://localhost:5000/api/trust/1");
+
+        if (!res.ok) {
+          throw new Error("Failed to load trust score");
+        }
+
+        const data = await res.json();
+        setScore(data.score);
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+
+    fetchTrustScore();
+  }, []);
+
+  // ✅ Correct place for color logic
+  let trustColor = "text-yellow-500";
+  if (score !== null) {
+    if (score < 40) trustColor = "text-red-600";
+    else if (score > 70) trustColor = "text-green-600";
+  }
 
   return (
-    <div className="bg-white p-5 rounded shadow mb-4">
-     <Layout>
-      <h1 className="text-2xl font-bold mb-6">
-        Trust Score
-      </h1>
+    <Layout>
+      <h1 className="text-2xl font-bold mb-6">🔐 Trust Score</h1>
 
-      {/* trust score UI */}
+      {error && <p className="text-red-600">{error}</p>}
+
+      {score === null ? (
+        <p>Loading trust score...</p>
+      ) : (
+        <div className="bg-white p-6 rounded shadow">
+          <p className={`text-4xl font-bold ${trustColor}`}>
+            {score} / 100
+          </p>
+
+          <p className="text-gray-600 mt-2">
+            Calculated based on verified activity consistency and proof.
+          </p>
+
+          <p className="text-sm text-gray-600 mt-3">
+            Trust score is calculated based on GPS distance validity,
+            activity consistency, and video proof.
+          </p>
+        </div>
+      )}
     </Layout>
-      <h1>{score}/100</h1>
-    </div>
   );
 }

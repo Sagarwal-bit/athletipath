@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import SportsRoadmap from "./pages/SportsRoadmap";
+import Roadmap from "./pages/Roadmap";
 import Progress from "./pages/Progress";
 import Events from "./pages/Events";
 import Notifications from "./pages/Notifications";
@@ -18,6 +19,7 @@ function App() {
       <Route path="/charts" element={<Charts />} />
       <Route path="/trust-score" element={<TrustScore />} />
       <Route path="/biometric" element={<Biometric />} />
+      <Route path="/roadmap" element={<Roadmap />} />
       <Route path="/sports-roadmap" element={<SportsRoadmap />} />
       <Route path="/" element={<Login />} />
       <Route path="/register" element={<Register />} />

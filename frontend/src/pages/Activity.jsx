@@ -1,39 +1,151 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Layout from "../components/Layout";
+import { calculateDistance } from "../utils/distance";
 
 export default function Activity() {
-  const [pos,setPos] = useState(null);
+  const studentId = 1;
 
-  const getLocation = () => {
-    navigator.geolocation.getCurrentPosition(p=>{
-      setPos(p.coords);
+  const [startLoc, setStartLoc] = useState(null);
+  const [endLoc, setEndLoc] = useState(null);
+  const [startTime, setStartTime] = useState(null);
+  const [duration, setDuration] = useState(0);
+  const [video, setVideo] = useState(null);
+  const [activities, setActivities] = useState([]);
+
+  // START ACTIVITY
+  const startActivity = () => {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setStartLoc({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+      });
+      setStartTime(Date.now());
+      alert("Activity started");
     });
   };
 
+  // END ACTIVITY
+  const endActivity = () => {
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setEndLoc({
+        lat: pos.coords.latitude,
+        lon: pos.coords.longitude,
+      });
+
+      const timeTaken = (Date.now() - startTime) / 1000; // seconds
+      setDuration(timeTaken);
+
+      alert("Activity ended");
+    });
+  };
+
+  // SUBMIT ACTIVITY
   const submitActivity = async () => {
-    await fetch("http://localhost:5000/api/activity/log",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({
-        student_id:1,
-        distance:1.2,
-        duration:300,
-        latitude:pos.latitude,
-        longitude:pos.longitude,
-        video_path:"demo-video.mp4"
-      })
+    if (!startLoc || !endLoc || !video || !duration) {
+      alert("Start, end, video required");
+      return;
+    }
+
+    const distance = calculateDistance(
+      startLoc.lat,
+      startLoc.lon,
+      endLoc.lat,
+      endLoc.lon
+    );
+
+    const speed = distance / (duration / 3600); // km/h
+
+    const formData = new FormData();
+    formData.append("student_id", studentId);
+    formData.append("distance", distance);
+    formData.append("duration", duration);
+    formData.append("latitude", endLoc.lat);
+    formData.append("longitude", endLoc.lon);
+    formData.append("speed", speed);
+    formData.append("video", video);
+
+    await fetch("http://localhost:5000/api/activity/log", {
+      method: "POST",
+      body: formData,
     });
 
-    alert("Activity saved!");
+    alert("Activity recorded successfully");
+    loadActivities();
   };
+
+  // LOAD HISTORY
+  const loadActivities = async () => {
+    const res = await fetch(
+      `http://localhost:5000/api/activity/${studentId}`
+    );
+    const data = await res.json();
+    setActivities(data);
+  };
+
+  useEffect(() => {
+    loadActivities();
+  }, []);
 
   return (
-    <div>
-      <h2>Run Activity</h2>
-      <button onClick={getLocation}>Get GPS</button>
+    <Layout>
+      <h1 className="text-2xl font-bold mb-6">🏃 Activity Tracking</h1>
 
-      {pos && <p>Lat: {pos.latitude} | Lon: {pos.longitude}</p>}
+      {/* ACTION PANEL */}
+      <div className="bg-white p-6 rounded shadow mb-6">
+        <button
+          onClick={startActivity}
+          className="bg-blue-600 text-white px-4 py-2 rounded mr-2"
+        >
+          ▶ Start Activity
+        </button>
 
-      <button onClick={submitActivity}>Submit Activity</button>
-    </div>
+        <button
+          onClick={endActivity}
+          className="bg-red-600 text-white px-4 py-2 rounded"
+        >
+          ⏹ End Activity
+        </button>
+
+        <div className="mt-4">
+          <label className="block mb-2 font-medium">
+            Video Proof
+          </label>
+          <input
+            type="file"
+            accept="video/*"
+            capture
+            onChange={(e) => setVideo(e.target.files[0])}
+          />
+        </div>
+
+        <button
+          onClick={submitActivity}
+          className="mt-4 bg-green-600 text-white px-4 py-2 rounded"
+        >
+          Submit Activity
+        </button>
+      </div>
+
+      {/* HISTORY */}
+      <div className="bg-white p-6 rounded shadow">
+        <h2 className="font-semibold mb-4">Recent Activities</h2>
+
+        {activities.map((a) => (
+          <div key={a.id} className="border-b py-4 text-sm">
+            <p>📅 {new Date(a.created_at).toLocaleString()}</p>
+            <p>📏 Distance: {a.distance.toFixed(2)} km</p>
+            <p>⚡ Speed: {a.speed.toFixed(2)} km/h</p>
+
+            {a.video_path && (
+              <video
+                src={`http://localhost:5000/${a.video_path}`}
+                controls
+                className="mt-2 w-64 rounded"
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    </Layout>
   );
 }
