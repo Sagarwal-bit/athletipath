@@ -4,7 +4,7 @@ import { calculateDistance } from "../utils/distance";
 import { authFetch, getAuthUser } from "../utils/auth";
 
 export default function Activity() {
-  const studentId = getAuthUser()?.id;
+  const role = getAuthUser()?.role;
 
   const [startLoc, setStartLoc] = useState(null);
   const [endLoc, setEndLoc] = useState(null);
@@ -64,7 +64,7 @@ export default function Activity() {
     formData.append("speed", speed);
     formData.append("video", video);
 
-    const res = await authFetch("/api/activity/log", {
+    const res = await authFetch("/api/v2/student/activity/log", {
       method: "POST",
       body: formData,
     });
@@ -80,16 +80,24 @@ export default function Activity() {
 
   // LOAD HISTORY
   const loadActivities = useCallback(async () => {
-    const res = await authFetch(`/api/activity/${studentId}`);
+    const res = await authFetch("/api/v2/student/activity");
     if (!res.ok) return;
     const data = await res.json();
     setActivities(data);
-  }, [studentId]);
+  }, []);
 
   useEffect(() => {
-    if (!studentId) return;
+    if (role !== "student") return;
     loadActivities();
-  }, [studentId, loadActivities]);
+  }, [role, loadActivities]);
+
+  if (role !== "student") {
+    return (
+      <Layout>
+        <p>This page is available for students only.</p>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -143,7 +151,7 @@ export default function Activity() {
 
             {a.video_path && (
               <video
-                src={`http://localhost:5000/${String(a.video_path).replace(/^\/+/, "")}`}
+                src={a.videoAccessUrl ? `http://localhost:5000${a.videoAccessUrl}` : ""}
                 controls
                 className="mt-2 w-64 rounded"
               />

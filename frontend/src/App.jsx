@@ -45,7 +45,7 @@ function App() {
       }
 
       try {
-        const res = await authFetch("/api/auth/me");
+        const res = await authFetch("/api/v2/auth/me");
         if (!res.ok) {
           clearAuthSession();
           setAuthenticated(false);
@@ -54,8 +54,9 @@ function App() {
         }
 
         const data = await res.json();
+        const latestToken = getAuthToken();
         setAuthSession({
-          token,
+          token: latestToken || token,
           role: data.user.role,
           user: data.user,
         });

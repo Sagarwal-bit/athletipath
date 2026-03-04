@@ -70,7 +70,7 @@ export default function Roadmap() {
     const user = getAuthUser();
     if (!user?.id) return;
     setWorkingStep(stepTitle);
-    const res = await authFetch("/api/roadmap/complete", {
+    const res = await authFetch("/api/v2/student/roadmap/complete", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -81,6 +81,12 @@ export default function Roadmap() {
     });
 
     const data = await res.json();
+    if (res.status === 202) {
+      alert("Milestone submitted for coach approval.");
+      setWorkingStep("");
+      return;
+    }
+
     if (!res.ok) {
       alert(data.error || "Failed to mark milestone complete");
       setWorkingStep("");

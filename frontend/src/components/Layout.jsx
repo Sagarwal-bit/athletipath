@@ -4,16 +4,26 @@ import { clearAuthSession, getAuthUser } from "../utils/auth";
 export default function Layout({ children }) {
   const navigate = useNavigate();
   const user = getAuthUser();
+  const role = user?.role || "student";
 
   const logout = () => {
     clearAuthSession();
     navigate("/", { replace: true });
   };
-//hi
+
+  const navItems = [
+    { to: "/dashboard", label: "Dashboard", roles: ["student", "coach", "admin", "super_admin"] },
+    { to: "/activity", label: "Activity", roles: ["student"] },
+    { to: "/roadmap", label: "Roadmap", roles: ["student"] },
+    { to: "/progress", label: "Progress", roles: ["student"] },
+    { to: "/charts", label: "Analytics", roles: ["student", "coach", "admin", "super_admin"] },
+    { to: "/events", label: "Events", roles: ["student", "coach", "admin", "super_admin"] },
+    { to: "/notifications", label: "Notifications", roles: ["student", "coach", "admin", "super_admin"] },
+    { to: "/trust-score", label: "Trust Score", roles: ["student", "coach"] },
+  ];
+
   return (
     <div className="flex min-h-screen bg-gray-100">
-      
-      {/* Sidebar */}
       <aside className="w-64 bg-gray-900 text-white p-5">
         <h2 className="text-xl font-bold mb-6">AthletiPath</h2>
         <p className="text-xs text-gray-300 mb-4">
@@ -21,14 +31,13 @@ export default function Layout({ children }) {
         </p>
 
         <nav className="space-y-3">
-          <Link className="block hover:text-blue-400" to="/dashboard">Dashboard</Link>
-          <Link className="block hover:text-blue-400" to="/activity">🏃 Activity</Link>
-          <Link className="block hover:text-blue-400" to="/roadmap">🧭 Roadmap</Link>
-          <Link className="block hover:text-blue-400" to="/progress">📈 Progress</Link>
-          <Link className="block hover:text-blue-400" to="/charts">📊 Analytics</Link>
-          <Link className="block hover:text-blue-400" to="/events">📅 Events</Link>
-          <Link className="block hover:text-blue-400" to="/notifications">🔔 Notifications</Link>
-          <Link className="block hover:text-blue-400" to="/trust-score">🔐 Trust Score</Link>
+          {navItems
+            .filter((item) => item.roles.includes(role))
+            .map((item) => (
+              <Link key={item.to} className="block hover:text-blue-400" to={item.to}>
+                {item.label}
+              </Link>
+            ))}
         </nav>
 
         <button
@@ -39,7 +48,6 @@ export default function Layout({ children }) {
         </button>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 p-8">
         {children}
       </main>
