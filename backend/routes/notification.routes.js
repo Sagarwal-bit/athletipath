@@ -2,6 +2,7 @@ const express = require("express");
 const db = require("../config/db");
 const sendMail = require("../utils/mailer");
 const { requireAuth, ensureSelfOrAdmin } = require("../middleware/auth");
+const { createNotification } = require("../services/notification.service");
 const router = express.Router();
 
 // generate notifications for all users
@@ -11,22 +12,31 @@ router.post("/generate", requireAuth, async (req, res) => {
       return res.status(403).json({ error: "Only admin/teacher can generate notifications" });
     }
 
-    const [events] = await db.query("SELECT id, title, deadline FROM events");
+    const [events] = await db.query(
+      `SELECT id, title, COALESCE(registration_deadline, deadline) AS deadline
+       FROM events
+       WHERE COALESCE(registration_deadline, deadline) >= CURDATE()`
+    );
     const [users] = await db.query(
       "SELECT id, email FROM users WHERE role='student' AND email IS NOT NULL AND email <> ''"
     );
 
     for (const e of events) {
       for (const u of users) {
-        await db.query(
-          "INSERT INTO notifications (user_id,event_id,notify_date) VALUES (?,?,?)",
-          [u.id, e.id, e.deadline]
-        );
+        await createNotification({
+          userId: u.id,
+          eventId: e.id,
+          type: "event_broadcast",
+          title: `Upcoming event: ${e.title}`,
+          message: `Registration deadline on ${String(e.deadline).slice(0, 10)}`,
+          relatedId: e.id,
+          notifyDate: e.deadline,
+        });
 
         await sendMail(
           u.email,
           "New Event Notification",
-          `You have a new event: ${e.title}\nDeadline: ${e.deadline}`
+          `You have a new event: ${e.title}\nDeadline: ${String(e.deadline).slice(0, 10)}`
         );
       }
     }
@@ -41,7 +51,7 @@ router.post("/generate", requireAuth, async (req, res) => {
 // get user notifications
 router.get("/:userId", requireAuth, ensureSelfOrAdmin("userId"), async (req, res) => {
   const [rows] = await db.query(
-    `SELECT e.title, e.deadline, n.status
+    `SELECT e.title, COALESCE(e.registration_deadline, e.deadline) AS deadline, n.status
      FROM notifications n
      JOIN events e ON n.event_id = e.id
      WHERE n.user_id=?`,

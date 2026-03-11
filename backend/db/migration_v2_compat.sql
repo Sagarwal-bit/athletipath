@@ -44,7 +44,21 @@ ALTER TABLE notifications
 
 ALTER TABLE events
   ADD COLUMN IF NOT EXISTS category VARCHAR(80) NOT NULL DEFAULT 'competition',
+  ADD COLUMN IF NOT EXISTS subdomain VARCHAR(120) NOT NULL DEFAULT 'general',
+  ADD COLUMN IF NOT EXISTS event_type VARCHAR(80) NOT NULL DEFAULT 'competition',
+  ADD COLUMN IF NOT EXISTS country VARCHAR(120) NOT NULL DEFAULT 'India',
+  ADD COLUMN IF NOT EXISTS start_date DATE NULL,
+  ADD COLUMN IF NOT EXISTS registration_deadline DATE NULL,
+  ADD COLUMN IF NOT EXISTS source VARCHAR(190) NOT NULL DEFAULT 'curated_admin',
+  ADD COLUMN IF NOT EXISTS registration_url VARCHAR(350) NULL,
+  ADD COLUMN IF NOT EXISTS updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
   ADD COLUMN IF NOT EXISTS created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+UPDATE events
+SET start_date = COALESCE(start_date, event_date),
+    registration_deadline = COALESCE(registration_deadline, deadline),
+    event_type = COALESCE(NULLIF(event_type, ''), category, 'competition'),
+    country = COALESCE(NULLIF(country, ''), 'India');
 
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id INT PRIMARY KEY AUTO_INCREMENT,
@@ -146,6 +160,44 @@ CREATE TABLE IF NOT EXISTS student_coach_map (
   CONSTRAINT fk_scm_coach FOREIGN KEY (coach_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS student_profiles (
+  user_id INT NOT NULL PRIMARY KEY,
+  admission_no VARCHAR(80) NULL,
+  class_name VARCHAR(120) NULL,
+  section VARCHAR(40) NULL,
+  institution VARCHAR(190) NULL,
+  belongs_to VARCHAR(190) NULL,
+  city VARCHAR(120) NULL,
+  state VARCHAR(120) NULL,
+  country VARCHAR(120) NULL,
+  guardian_name VARCHAR(120) NULL,
+  phone VARCHAR(30) NULL,
+  address TEXT NULL,
+  assigned_teacher_id INT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_student_profile_teacher (assigned_teacher_id),
+  CONSTRAINT fk_student_profile_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_student_profile_teacher FOREIGN KEY (assigned_teacher_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS teacher_profiles (
+  user_id INT NOT NULL PRIMARY KEY,
+  employee_id VARCHAR(80) NULL,
+  department VARCHAR(120) NULL,
+  institution VARCHAR(190) NULL,
+  belongs_to VARCHAR(190) NULL,
+  city VARCHAR(120) NULL,
+  state VARCHAR(120) NULL,
+  country VARCHAR(120) NULL,
+  qualification VARCHAR(190) NULL,
+  phone VARCHAR(30) NULL,
+  address TEXT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_teacher_profile_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS achievements (
   id INT PRIMARY KEY AUTO_INCREMENT,
   student_id INT NOT NULL,
@@ -167,3 +219,9 @@ ALTER TABLE trust_scores
 ALTER TABLE users
   ADD INDEX idx_users_role (role),
   ADD INDEX idx_users_created_at (created_at);
+
+ALTER TABLE events
+  ADD UNIQUE KEY uq_event_identity (title, domain, subdomain, location, country, event_date),
+  ADD INDEX idx_event_country (country),
+  ADD INDEX idx_event_start_date (start_date),
+  ADD INDEX idx_event_registration_deadline (registration_deadline);

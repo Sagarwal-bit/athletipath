@@ -1,7 +1,7 @@
 const db = require("../config/db");
 const sendMail = require("../utils/mailer");
 
-async function createNotification({ userId, type, title, message, relatedId = null }) {
+async function createNotification({ userId, type, title, message, relatedId = null, eventId = null, notifyDate = null }) {
   const [[existing]] = await db.query(
     `SELECT id
      FROM notifications
@@ -12,9 +12,9 @@ async function createNotification({ userId, type, title, message, relatedId = nu
   if (existing) return;
 
   await db.query(
-    `INSERT INTO notifications (user_id, type, title, message, related_id, notify_date, status)
-     VALUES (?, ?, ?, ?, ?, NOW(), 'pending')`,
-    [userId, type, title, message, relatedId]
+    `INSERT INTO notifications (user_id, event_id, type, title, message, related_id, notify_date, status)
+     VALUES (?, ?, ?, ?, ?, ?, COALESCE(?, NOW()), 'pending')`,
+    [userId, eventId, type, title, message, relatedId, notifyDate]
   );
 }
 

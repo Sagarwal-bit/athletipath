@@ -6,6 +6,7 @@ const { asyncHandler } = require("../../middleware/errors");
 const { getAdminDashboard } = require("../../services/analytics.service");
 const { calculateUserRiskScore } = require("../../services/security.service");
 const sendMail = require("../../utils/mailer");
+const { upsertEvent } = require("../../services/event.service");
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ router.patch(
   asyncHandler(async (req, res) => {
     const userId = Number(req.params.userId);
     const role = String(req.body.role || "").toLowerCase();
-    const allowed = new Set(["student", "coach", "admin", "super_admin"]);
+    const allowed = new Set(["student", "coach", "teacher", "admin", "super_admin"]);
 
     if (!allowed.has(role)) {
       return res.status(400).json({ error: "Invalid role" });
@@ -97,17 +98,40 @@ router.get(
 router.post(
   "/competitions",
   asyncHandler(async (req, res) => {
-    const { title, domain, category, eventDate, deadline, location, description } = req.body;
+    const {
+      title,
+      domain,
+      subdomain,
+      category,
+      eventType,
+      eventDate,
+      startDate,
+      deadline,
+      registrationDeadline,
+      location,
+      country,
+      source,
+      registrationUrl,
+      description,
+    } = req.body;
 
-    if (!title || !domain || !eventDate || !deadline) {
-      return res.status(400).json({ error: "title, domain, eventDate and deadline are required" });
+    if (!title || !domain || !(eventDate || startDate) || !(deadline || registrationDeadline)) {
+      return res.status(400).json({ error: "title, domain, startDate/eventDate and registrationDeadline/deadline are required" });
     }
 
-    await db.query(
-      `INSERT INTO events (title, domain, location, event_date, deadline, description, category)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [title, domain, location || null, eventDate, deadline, description || null, category || "competition"]
-    );
+    await upsertEvent({
+      title,
+      domain,
+      subdomain,
+      eventType: eventType || category,
+      startDate: startDate || eventDate,
+      registrationDeadline: registrationDeadline || deadline,
+      location,
+      country,
+      source: source || "curated_admin",
+      registrationUrl,
+      description,
+    });
 
     return res.json({ message: "Competition/exam created" });
   })

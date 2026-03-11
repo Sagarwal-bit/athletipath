@@ -115,10 +115,10 @@ router.get("/status/:studentId", requireAuth, ensureSelfOrAdmin("studentId"), as
     let upcomingEvents = [];
     try {
       const [events] = await db.query(
-        `SELECT id, title, deadline, location
+        `SELECT id, title, COALESCE(registration_deadline, deadline) AS deadline, location
          FROM events
-         WHERE LOWER(domain)=? AND deadline >= CURDATE()
-         ORDER BY deadline
+         WHERE LOWER(domain)=? AND COALESCE(registration_deadline, deadline) >= CURDATE()
+         ORDER BY COALESCE(registration_deadline, deadline)
          LIMIT 3`,
         [selected.domain]
       );

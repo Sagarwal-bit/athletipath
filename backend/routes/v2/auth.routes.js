@@ -45,7 +45,7 @@ router.post(
   }),
   asyncHandler(async (req, res) => {
     const { name, email, password, role } = req.body;
-    const allowedRoles = new Set(["student", "coach"]);
+    const allowedRoles = new Set(["student", "coach", "teacher"]);
     const safeRole = allowedRoles.has(role) ? role : "student";
 
     const hash = await bcrypt.hash(password, 10);

@@ -35,6 +35,13 @@ const router = express.Router();
 
 router.use(requireAuth, authorizeRoles("student"));
 
+function cleanText(value, maxLen = 255) {
+  if (value === undefined || value === null) return null;
+  const text = String(value).trim();
+  if (!text) return null;
+  return text.slice(0, maxLen);
+}
+
 router.post(
   "/activity/log",
   upload.single("video"),
@@ -163,6 +170,129 @@ router.post(
       validationFlags,
       risk,
     });
+  })
+);
+
+router.get(
+  "/profile",
+  asyncHandler(async (req, res) => {
+    const studentId = Number(req.user.id);
+    const [[profile]] = await db.query(
+      `SELECT sp.user_id, sp.admission_no, sp.class_name, sp.section, sp.institution,
+              sp.belongs_to, sp.city, sp.state, sp.country, sp.guardian_name, sp.phone, sp.address, sp.assigned_teacher_id,
+              teacher.name AS assigned_teacher_name, teacher.email AS assigned_teacher_email
+       FROM student_profiles sp
+       LEFT JOIN users teacher ON teacher.id = sp.assigned_teacher_id
+       WHERE sp.user_id=?`,
+      [studentId]
+    );
+
+    if (!profile) {
+      return res.json({
+        user_id: studentId,
+        admission_no: null,
+        class_name: null,
+        section: null,
+        institution: null,
+        belongs_to: null,
+        city: null,
+        state: null,
+        country: null,
+        guardian_name: null,
+        phone: null,
+        address: null,
+        assigned_teacher_id: null,
+        assigned_teacher_name: null,
+        assigned_teacher_email: null,
+      });
+    }
+
+    return res.json(profile);
+  })
+);
+
+router.post(
+  "/profile",
+  asyncHandler(async (req, res) => {
+    const studentId = Number(req.user.id);
+    const {
+      admissionNo,
+      className,
+      section,
+      institution,
+      belongsTo,
+      city,
+      state,
+      country,
+      guardianName,
+      phone,
+      address,
+      assignedTeacherId,
+    } = req.body;
+
+    let safeTeacherId = null;
+    if (assignedTeacherId !== undefined && assignedTeacherId !== null && assignedTeacherId !== "") {
+      safeTeacherId = Number(assignedTeacherId);
+      if (!Number.isInteger(safeTeacherId) || safeTeacherId <= 0) {
+        return res.status(400).json({ error: "assignedTeacherId must be a positive integer" });
+      }
+
+      const [[teacherUser]] = await db.query(
+        "SELECT id, role FROM users WHERE id=?",
+        [safeTeacherId]
+      );
+      if (!teacherUser) {
+        return res.status(404).json({ error: "Assigned teacher not found" });
+      }
+      if (!["coach", "teacher", "admin", "super_admin"].includes(String(teacherUser.role || "").toLowerCase())) {
+        return res.status(400).json({ error: "assignedTeacherId must refer to a teacher/coach user" });
+      }
+    }
+
+    await db.query(
+      `INSERT INTO student_profiles
+      (user_id, admission_no, class_name, section, institution, belongs_to, city, state, country, guardian_name, phone, address, assigned_teacher_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+      ON DUPLICATE KEY UPDATE
+      admission_no=VALUES(admission_no),
+      class_name=VALUES(class_name),
+      section=VALUES(section),
+      institution=VALUES(institution),
+      belongs_to=VALUES(belongs_to),
+      city=VALUES(city),
+      state=VALUES(state),
+      country=VALUES(country),
+      guardian_name=VALUES(guardian_name),
+      phone=VALUES(phone),
+      address=VALUES(address),
+      assigned_teacher_id=VALUES(assigned_teacher_id),
+      updated_at=NOW()`,
+      [
+        studentId,
+        cleanText(admissionNo, 80),
+        cleanText(className, 120),
+        cleanText(section, 40),
+        cleanText(institution, 190),
+        cleanText(belongsTo, 190),
+        cleanText(city, 120),
+        cleanText(state, 120),
+        cleanText(country, 120),
+        cleanText(guardianName, 120),
+        cleanText(phone, 30),
+        cleanText(address, 1000),
+        safeTeacherId,
+      ]
+    );
+
+    if (safeTeacherId) {
+      await db.query(
+        `INSERT IGNORE INTO student_coach_map (student_id, coach_id, created_at)
+         VALUES (?, ?, NOW())`,
+        [studentId, safeTeacherId]
+      );
+    }
+
+    return res.json({ message: "Student profile saved" });
   })
 );
 

@@ -135,14 +135,26 @@ CREATE TABLE IF NOT EXISTS events (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   title VARCHAR(200) NOT NULL,
   domain VARCHAR(120) NOT NULL,
+  subdomain VARCHAR(120) NOT NULL DEFAULT 'general',
   category VARCHAR(80) NOT NULL DEFAULT 'competition',
+  event_type VARCHAR(80) NOT NULL DEFAULT 'competition',
   location VARCHAR(200) NULL,
+  country VARCHAR(120) NOT NULL DEFAULT 'India',
   event_date DATE NOT NULL,
   deadline DATE NOT NULL,
+  start_date DATE NULL,
+  registration_deadline DATE NULL,
+  source VARCHAR(190) NOT NULL DEFAULT 'curated_admin',
+  registration_url VARCHAR(350) NULL,
   description TEXT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_event_identity (title, domain, subdomain, location, country, event_date),
   INDEX idx_event_deadline (deadline),
-  INDEX idx_event_domain (domain)
+  INDEX idx_event_domain (domain),
+  INDEX idx_event_country (country),
+  INDEX idx_event_start_date (start_date),
+  INDEX idx_event_registration_deadline (registration_deadline)
 );
 
 CREATE TABLE IF NOT EXISTS notifications (
@@ -179,6 +191,44 @@ CREATE TABLE IF NOT EXISTS student_coach_map (
   INDEX idx_scm_coach (coach_id),
   CONSTRAINT fk_scm_student FOREIGN KEY (student_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_scm_coach FOREIGN KEY (coach_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS student_profiles (
+  user_id BIGINT PRIMARY KEY,
+  admission_no VARCHAR(80) NULL,
+  class_name VARCHAR(120) NULL,
+  section VARCHAR(40) NULL,
+  institution VARCHAR(190) NULL,
+  belongs_to VARCHAR(190) NULL,
+  city VARCHAR(120) NULL,
+  state VARCHAR(120) NULL,
+  country VARCHAR(120) NULL,
+  guardian_name VARCHAR(120) NULL,
+  phone VARCHAR(30) NULL,
+  address TEXT NULL,
+  assigned_teacher_id BIGINT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_student_profile_teacher (assigned_teacher_id),
+  CONSTRAINT fk_student_profile_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_student_profile_teacher FOREIGN KEY (assigned_teacher_id) REFERENCES users(id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS teacher_profiles (
+  user_id BIGINT PRIMARY KEY,
+  employee_id VARCHAR(80) NULL,
+  department VARCHAR(120) NULL,
+  institution VARCHAR(190) NULL,
+  belongs_to VARCHAR(190) NULL,
+  city VARCHAR(120) NULL,
+  state VARCHAR(120) NULL,
+  country VARCHAR(120) NULL,
+  qualification VARCHAR(190) NULL,
+  phone VARCHAR(30) NULL,
+  address TEXT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_teacher_profile_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS achievements (

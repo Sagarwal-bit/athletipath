@@ -1,29 +1,111 @@
 const express = require("express");
 const db = require("../config/db");
 const { requireAuth } = require("../middleware/auth");
+const { asyncHandler } = require("../middleware/errors");
+const {
+  listUpcomingEvents,
+  getRecommendedEventsForUser,
+  upsertEvent,
+} = require("../services/event.service");
 
 const router = express.Router();
 
-// add event
-router.post("/add", requireAuth, async (req,res)=>{
-  if (!["admin", "teacher"].includes(req.user.role)) {
+function requireAdminEventPublisher(req, res, next) {
+  if (!["admin", "teacher", "super_admin"].includes(req.user.role)) {
     return res.status(403).json({ error: "Only admin/teacher can add events" });
   }
+  return next();
+}
 
-  const { title, domain, location, event_date, deadline, description } = req.body;
+router.post(
+  "/add",
+  requireAuth,
+  requireAdminEventPublisher,
+  asyncHandler(async (req, res) => {
+    await upsertEvent({ ...req.body, source: req.body.source || "curated_admin" });
+    res.json({ message: "Event saved" });
+  })
+);
 
-  await db.query(
-    "INSERT INTO events (title,domain,location,event_date,deadline,description) VALUES (?,?,?,?,?,?)",
-    [title, domain, location, event_date, deadline, description]
-  );
+router.post(
+  "/",
+  requireAuth,
+  requireAdminEventPublisher,
+  asyncHandler(async (req, res) => {
+    await upsertEvent({ ...req.body, source: req.body.source || "curated_admin" });
+    res.json({ message: "Event saved" });
+  })
+);
 
-  res.json({ message:"Event added" });
-});
+router.get(
+  "/",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const rows = await listUpcomingEvents({
+      domain: req.query.domain,
+      country: req.query.country,
+      subdomain: req.query.subdomain,
+      days: req.query.days || 180,
+      limit: req.query.limit || 200,
+    });
+    res.json(rows);
+  })
+);
 
-// get events
-router.get("/", requireAuth, async (req,res)=>{
-  const [rows] = await db.query("SELECT * FROM events ORDER BY event_date");
-  res.json(rows);
-});
+router.get(
+  "/upcoming",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const rows = await listUpcomingEvents({
+      domain: req.query.domain,
+      country: req.query.country,
+      subdomain: req.query.subdomain,
+      days: req.query.days || 90,
+      limit: req.query.limit || 100,
+    });
+    res.json(rows);
+  })
+);
+
+router.get(
+  "/domain/:domain",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const rows = await listUpcomingEvents({
+      domain: req.params.domain,
+      country: req.query.country,
+      subdomain: req.query.subdomain,
+      days: req.query.days || 180,
+      limit: req.query.limit || 120,
+    });
+    res.json(rows);
+  })
+);
+
+router.get(
+  "/recommended/:userId",
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const userId = Number(req.params.userId);
+    const requesterId = Number(req.user.id);
+    const role = String(req.user.role || "").toLowerCase();
+    if (!(requesterId === userId || ["admin", "super_admin", "coach", "teacher"].includes(role))) {
+      return res.status(403).json({ error: "Forbidden: access denied" });
+    }
+    const result = await getRecommendedEventsForUser(userId, {
+      limit: req.query.limit || 20,
+    });
+    res.json(result);
+  })
+);
+
+router.get(
+  "/legacy/all",
+  requireAuth,
+  asyncHandler(async (_req, res) => {
+    const [rows] = await db.query("SELECT * FROM events ORDER BY COALESCE(start_date, event_date)");
+    res.json(rows);
+  })
+);
 
 module.exports = router;
